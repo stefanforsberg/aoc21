@@ -77,5 +77,13 @@ bool IllegalMoveP2(List<string> path, string newCave)
         return false;
     }
 
-    return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Select(x => x.Count()).OrderByDescending(x => x).Take(2).Sum() > 3;
+    var c = path.Count(x => x == newCave);
+    
+    if(c <= 1) return false;
+
+    if(c > 2) return true;
+
+    return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Count(x => x.Count() > 1) > 1;
+
+    // return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Select(x => x.Count()).OrderByDescending(x => x).Take(2).Sum() > 3;
 }
