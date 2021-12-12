@@ -52,12 +52,12 @@ void P2()
                 continue;
             }
 
-            var cp = new List<string>(path);
-            cp.Add(moveTo);
+            var newPath = new List<string>(path);
+            newPath.Add(moveTo);
 
-            if(!IllegalMoveP2(cp, moveTo))
+            if(!IllegalMoveP2(newPath))
             {
-                paths.Add(cp);
+                paths.Add(newPath);
             }
         }
     } while (paths.Count() > 0);
@@ -65,13 +65,15 @@ void P2()
     Console.WriteLine("Total number of paths: " + totalPaths);
 }
 
-bool IllegalMoveP1(List<string> path, string newCave)
+bool IllegalMoveP1(List<string> path)
 {
     return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Any(x => x.Count() > 1);
 }
 
-bool IllegalMoveP2(List<string> path, string newCave)
+bool IllegalMoveP2(List<string> path)
 {
+    var newCave = path.Last();
+
     if (!newCave.All(char.IsLower))
     {
         return false;
@@ -84,6 +86,4 @@ bool IllegalMoveP2(List<string> path, string newCave)
     if(c > 2) return true;
 
     return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Count(x => x.Count() > 1) > 1;
-
-    // return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Select(x => x.Count()).OrderByDescending(x => x).Take(2).Sum() > 3;
 }
