@@ -32,8 +32,8 @@ Console.WriteLine(s.Elapsed.TotalSeconds);
 
 void P2()
 {
-    var paths = new Queue<List<string>>();
-    paths.Enqueue(new List<string> {"start"});
+    var paths = new Queue<string[]>();
+    paths.Enqueue(new[] {"start"});
 
     var totalPaths = 0;
 
@@ -51,8 +51,9 @@ void P2()
                 continue;
             }
 
-            var newPath = new List<string>(path);
-            newPath.Add(moveTo);
+            var newPath = new string[path.Length+1]; 
+            Array.Copy(path, newPath, path.Length);
+            newPath[path.Length] = moveTo;
 
             if(!IllegalMoveP2(newPath))
             {
@@ -69,7 +70,7 @@ bool IllegalMoveP1(List<string> path)
     return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Any(x => x.Count() > 1);
 }
 
-bool IllegalMoveP2(List<string> path)
+bool IllegalMoveP2(string[] path)
 {
     var newCave = path.Last();
 
