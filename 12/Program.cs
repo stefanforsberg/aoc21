@@ -3,60 +3,71 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-var input = new List<(string, string)>();
+var input = File
+    .ReadAllLines("input.txt")
+    .Select(x => x.Split("-"))
+    .Select(x => (from: x[0], to: x[1]))
+    .ToList();
+
+var possibleMoves = input.Select(x => x.from).Concat(input.Select(x => x.to))
+    .Distinct()
+    .ToDictionary(x => x, x => PossibleVisits(x));
 
 var s = new System.Diagnostics.Stopwatch();
 s.Start();
 
 P1();
-P2();
 
 Console.WriteLine(s.Elapsed.TotalSeconds);
 
 void P1()
 {
-    Parse();
+    var paths = new List<List<string>>();
+    paths.Add(new List<string> {"start"});
 
-    var start = input.Where(x => x.Item1 == "start");
-
-    var paths = new List<Path>();
-    var endedPaths = new List<Path>();
-
-    paths.Add(new Path(new[] { "start" }.ToList()));
+    var maxPossiblePaths = 0;
+    var totalPaths = 0;
 
     do
     {
-        var path = paths.First();
-
-        var possible = PossibleVisits(path.LatestPoint());
-
-        foreach (var otherpossible in possible.Skip(1))
+        if(paths.Count > maxPossiblePaths)
         {
-            paths.Add(Path.NewPath(path, otherpossible));
+            maxPossiblePaths = paths.Count;
         }
 
-        path.Add(possible.First());
+        var path = paths.First();
+        paths.RemoveAt(0);
 
-        endedPaths.AddRange(paths.Where(p => p.IsEnded()));
+        var possible = possibleMoves[path.Last()];
 
-        paths = paths.Where(p => !p.IsEnded()).ToList();
+        foreach (var moveTo in possible)
+        {
+            if(moveTo == "end")
+            {
+                totalPaths++;
+                continue;
+            }
 
+            var cp = new List<string>(path);
+            cp.Add(moveTo);
+
+            if(!EndedP2(cp, moveTo))
+            {
+                paths.Add(cp);
+            }
+            // if(EndedP2(cp, otherpossible))
+            // {
+            //     endedPaths.Add(cp);
+            // } 
+            // else
+            // {
+            //     paths.Add(cp);
+            // }
+        }
     } while (paths.Count() > 0);
 
-    var ending = endedPaths.Where(p => p.Visited.Contains("end"));
-
-    Console.WriteLine("Ending cave: " + ending.Count());
-}
-
-List<string> AddToPath(string path, string pos)
-{
-    var newPaths = new List<string>();
-    foreach (var pv in PossibleVisits(pos))
-    {
-        newPaths.Add(path + "->" + pv);
-    }
-
-    return newPaths;
+    Console.WriteLine("Total number of paths: " + totalPaths);
+    Console.WriteLine("Max paths considered: " + maxPossiblePaths);
 }
 
 List<string> PossibleVisits(string pos)
@@ -72,104 +83,17 @@ List<string> PossibleVisits(string pos)
     return f.Union(to).Where(x => x != "start").ToList();
 }
 
-
-
-void P2()
+bool EndedP1(List<string> path, string newCave)
 {
+    return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Any(x => x.Count() > 1);
 }
 
-void Parse()
+bool EndedP2(List<string> path, string newCave)
 {
-    input = File
-        .ReadAllLines("input.txt")
-        .Select(x => x.Split("-"))
-        .Select(x => (from: x[0], to: x[1]))
-        .ToList();
-}
-
-public class Path
-{
-    private bool ended;
-    public List<string> Visited;
-
-    public bool HasBeenVisistedTwice = false;
-
-    public static Path NewPath(Path path, string to)
+    if (!newCave.All(char.IsLower))
     {
-        var p = new Path(new List<string>(path.Visited));
-        p.HasBeenVisistedTwice = path.HasBeenVisistedTwice;
-        p.Add(to);
-        return p;
+        return false;
     }
 
-    public Path(List<string> path)
-    {
-        Visited = path;
-    }
-
-    public void Add(string cave)
-    {
-        Visited.Add(cave);
-
-
-        SetIsEnded(cave);
-    }
-
-    public override string ToString()
-    {
-        return string.Join("->", Visited);
-    }
-
-    public string LatestPoint()
-    {
-        return Visited.Last();
-    }
-
-    public bool IsEnded()
-    {
-        return ended;
-    }
-
-    private void SetIsEnded(string cave)
-    {
-        if (cave == "end")
-        {
-            ended = true;
-            return;
-        }
-
-        if (cave.All(char.IsLower))
-        {
-            var visitsForCave = Visited.Count(x => x == cave);
-            if (visitsForCave > 2)
-            {
-                ended = true;
-                return;
-            }
-
-            if (visitsForCave == 2)
-            {
-                if (HasBeenVisistedTwice)
-                {
-                    ended = true;
-                    return;
-                }
-
-                HasBeenVisistedTwice = true;
-
-                // ended = Visited.Where(x => x.All(char.IsLower)).GroupBy(x => x).Select(x => x.Count()).OrderByDescending(x => x).Take(2).Sum() > 3;
-
-                // ended = Visited.Where(x => x.All(char.IsLower)).Where(x => x!= cave).GroupBy(x => x).Any(x => x.Count() > 1);
-            }
-        }
-
-        // ended = Visited.Where(x => x.All(char.IsLower)).GroupBy(x => x).Any(x => x.Count() > 1);
-
-
-        // var smallCaves = Visited.Where(x => x.All(char.IsLower)).GroupBy(x => x).Select(x => x.Count()).OrderByDescending(x => x).Take(2).Sum() > 3;
-        // ended = Visited.Any(x => x == "end") || smallCaves;
-
-        // // p1
-        // ended = Visited.Any(x => x == "end") || Visited.Where(x => x.All(char.IsLower)).GroupBy(x => x).Any(x => x.Count() > 1); 
-    }
+    return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Select(x => x.Count()).OrderByDescending(x => x).Take(2).Sum() > 3;
 }
