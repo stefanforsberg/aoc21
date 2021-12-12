@@ -32,15 +32,14 @@ Console.WriteLine(s.Elapsed.TotalSeconds);
 
 void P2()
 {
-    var paths = new List<List<string>>();
-    paths.Add(new List<string> {"start"});
+    var paths = new Queue<List<string>>();
+    paths.Enqueue(new List<string> {"start"});
 
     var totalPaths = 0;
 
     do
     {
-        var path = paths.First();
-        paths.RemoveAt(0);
+        var path = paths.Dequeue();
 
         var possible = possibleMoves[path.Last()];
 
@@ -57,7 +56,7 @@ void P2()
 
             if(!IllegalMoveP2(newPath))
             {
-                paths.Add(newPath);
+                paths.Enqueue(newPath);
             }
         }
     } while (paths.Count() > 0);
