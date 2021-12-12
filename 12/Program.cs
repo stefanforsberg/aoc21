@@ -11,7 +11,17 @@ var input = File
 
 var possibleMoves = input.Select(x => x.from).Concat(input.Select(x => x.to))
     .Distinct()
-    .ToDictionary(x => x, x => PossibleVisits(x));
+    .ToDictionary(x => x, x => {
+         var from = input
+            .Where(i => i.Item1 == x)
+            .Select(x => x.Item2);
+
+        var to = input
+            .Where(i => i.Item2 == x)
+            .Select(x => x.Item1);
+
+        return from.Union(to).Where(x => x != "start").ToList();
+    });
 
 var s = new System.Diagnostics.Stopwatch();
 s.Start();
@@ -45,43 +55,22 @@ void P2()
             var cp = new List<string>(path);
             cp.Add(moveTo);
 
-            if(!EndedP2(cp, moveTo))
+            if(!IllegalMoveP2(cp, moveTo))
             {
                 paths.Add(cp);
             }
-            // if(EndedP2(cp, otherpossible))
-            // {
-            //     endedPaths.Add(cp);
-            // } 
-            // else
-            // {
-            //     paths.Add(cp);
-            // }
         }
     } while (paths.Count() > 0);
 
     Console.WriteLine("Total number of paths: " + totalPaths);
 }
 
-List<string> PossibleVisits(string pos)
-{
-    var f = input
-        .Where(i => i.Item1 == pos)
-        .Select(x => x.Item2);
-
-    var to = input
-        .Where(i => i.Item2 == pos)
-        .Select(x => x.Item1);
-
-    return f.Union(to).Where(x => x != "start").ToList();
-}
-
-bool EndedP1(List<string> path, string newCave)
+bool IllegalMoveP1(List<string> path, string newCave)
 {
     return path.Where(x => x.All(char.IsLower)).GroupBy(x => x).Any(x => x.Count() > 1);
 }
 
-bool EndedP2(List<string> path, string newCave)
+bool IllegalMoveP2(List<string> path, string newCave)
 {
     if (!newCave.All(char.IsLower))
     {
