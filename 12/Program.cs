@@ -16,25 +16,19 @@ var possibleMoves = input.Select(x => x.from).Concat(input.Select(x => x.to))
 var s = new System.Diagnostics.Stopwatch();
 s.Start();
 
-P1();
+P2();
 
 Console.WriteLine(s.Elapsed.TotalSeconds);
 
-void P1()
+void P2()
 {
     var paths = new List<List<string>>();
     paths.Add(new List<string> {"start"});
 
-    var maxPossiblePaths = 0;
     var totalPaths = 0;
 
     do
     {
-        if(paths.Count > maxPossiblePaths)
-        {
-            maxPossiblePaths = paths.Count;
-        }
-
         var path = paths.First();
         paths.RemoveAt(0);
 
@@ -67,7 +61,6 @@ void P1()
     } while (paths.Count() > 0);
 
     Console.WriteLine("Total number of paths: " + totalPaths);
-    Console.WriteLine("Max paths considered: " + maxPossiblePaths);
 }
 
 List<string> PossibleVisits(string pos)
