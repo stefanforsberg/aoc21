@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 var s = new System.Diagnostics.Stopwatch();
 s.Start();
@@ -13,67 +12,60 @@ var input = File
 
 var template = input.First();
 
-// var rules = input.Where(x => x.Contains("->")).Select(x => x.Split("->")).ToDictionary(x => x[0].Trim(), x => x[1].Trim());
-var rules = input.Where(x => x.Contains("->")).Select(x => x.Split("->")).ToLookup(x => x[0].Trim(), x => x[1].Trim());
+var rules = input.Where(x => x.Contains("->")).Select(x => x.Split("->")).ToLookup(x => x[0].Trim(), x => new[] { x[0].Trim()[0] + x[1].Trim(), x[1].Trim() + x[0].Trim()[1] });
 
-var rules2 = input.Where(x => x.Contains("->")).Select(x => x.Split("->")).ToLookup(x => x[0].Trim(), x => x[0].Trim()[0] + x[1].Trim() + x[0].Trim()[1]);
+var pairs = (Enumerable.Range(0, template.Length - 1).Select(i => template.Substring(i, 2)));
 
-string newTemplate = template;
+var currentStep = new Dictionary<string, long>();
 
-// for(var step = 0; step < 10; step++)
-// {
-//     Console.WriteLine("Step " + (step+1) + ". Length: " + template.Length);
-
-//     // foreach(var rule in rules2)
-//     // {
-//     //     newTemplate = newTemplate.Replace(rule.Key, rule.First());
-//     // }
-
-//     for(var i = template.Length-2; i >= 0; i--)
-//     {
-
-//         var p = template.Substring(i,2);
-
-//         var r = rules[p].FirstOrDefault();
-
-//         template = template.Insert(i+1, r);
-//     }
-// }
-
-
-
-string Expand(string toExpand)
+foreach (var p in pairs.GroupBy(x => x))
 {
-    for (var step = 0; step < 10; step++)
-    {
-        
-        for (var i = toExpand.Length - 2; i >= 0; i--)
-        {
-            var p = toExpand.Substring(i, 2);
-            var r = rules[p].FirstOrDefault();
-            toExpand = toExpand.Insert(i + 1, r);
-        }
+    AddOrInc(currentStep, p.Key, p.Count());
+}
 
-        Console.WriteLine("After Step " + (step + 1) + ": " + toExpand.Length);
+// NN always becomes the pair NC and CN on the next step so use that to count the number of pairs for each step.
+for (var step = 0; step < 40; step++)
+{
+    var nextStep = new Dictionary<string, long>();
+
+    foreach(var p in currentStep)
+    {
+        var pairGives = rules[p.Key].SelectMany(x => x);
+
+        foreach(var newPair in pairGives)
+        {
+            AddOrInc(nextStep, newPair, p.Value);
+        }
     }
 
-    return toExpand.Substring(0, toExpand.Length-1);
+    currentStep = nextStep;
 }
 
-var total = string.Empty;
-for (var i = 0; i <= template.Length - 2; i++)
+// Since we are counting pairs the expand of NN with C create two pairs NC and CN but it's actually only NCN so for counting
+// only count the first letter in each pair and add the last char in the starting template manually
+// NC CN -> N(c)+C(n)+N => 2N and 1C
+var letterCount = new Dictionary<string, long>();
+foreach(var k in currentStep.Keys)
 {
-    // var expandedPair = Expand(template.Substring(i, 2));
-    
-    total +=  Expand(template.Substring(i, 2));
+    AddOrInc(letterCount, k[0].ToString(), currentStep[k]);
 }
+AddOrInc(letterCount, template.Last().ToString(), 1);
 
-total += template.Last();
+var max = letterCount.Select(l => l.Value).Max();
+var min = letterCount.Select(l => l.Value).Min();
 
+Console.WriteLine("Diff: " + (max-min));
 
+Console.WriteLine("Total: " + s.Elapsed.TotalSeconds);
 
-var c = total.GroupBy(x => x).Select(x => x.Count());
-
-Console.WriteLine("result: " + (c.Max() - c.Min()));
-
-Console.WriteLine("Done: " + s.Elapsed.TotalSeconds);
+void AddOrInc(Dictionary<string, long> d, string key, long count)
+{
+    if(d.ContainsKey(key))
+    {
+        d[key]+= count;
+    }
+    else
+    {
+        d[key]= count;
+    }
+}
