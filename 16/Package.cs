@@ -6,24 +6,15 @@ public class Package
 {
     public long Version { get; set; }
     public string Type { get; set; }
-
     public string Rest { get; set; }
-
     public long LiteralValue { get; set; }
-
     public string LengthTypeId { get; set; }
-
     public long LengthTypeValue { get; set; }
-
     public int CharsUsedCount { get; set; }
     public string CharsUsed { get; set; }
-
     public int Level { get; set; }
-
     public Package[] SubPackages { get; set; }
-
     public long Value { get; set; }
-
     public long TotalVersion { get; set; }
 
     public Package(string s, int level)
