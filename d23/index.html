@@ -1,0 +1,155 @@
+<html>
+
+<head>
+    <style>
+        .pod:hover {
+            background-color: #00ff00;
+        }
+
+        .empty:hover {
+            background-color: #00ff00;
+        }
+    </style>
+</head>
+
+
+<body>
+    <div id="states" style="position: absolute;">
+
+    </div>
+    <div id="cave" style="margin: auto; font-size: 80px; width: 300px; font-family: monospace;">
+
+    </div>
+
+    <script>
+        const cave = document.getElementById("cave");
+
+
+
+
+        var pods = [
+            { x: 3, y: 2, cost: 100, steps: 0, name: "C" },
+            { x: 3, y: 3, cost: 1000, steps: 0, name: "D" },
+            { x: 3, y: 4, cost: 1000, steps: 0, name: "D" },
+            { x: 3, y: 5, cost: 10, steps: 0, name: "B" },
+
+            { x: 5, y: 2, cost: 1, steps: 0, name: "A" },
+            { x: 5, y: 3, cost: 100, steps: 0, name: "C" },
+            { x: 5, y: 4, cost: 10, steps: 0, name: "B" },
+            { x: 5, y: 5, cost: 1, steps: 0, name: "A" },
+
+            { x: 7, y: 2, cost: 1000, steps: 0, name: "D" },
+            { x: 7, y: 3, cost: 10, steps: 0, name: "B" },
+            { x: 7, y: 4, cost: 1, steps: 0, name: "A" },
+            { x: 7, y: 5, cost: 10, steps: 0, name: "B" },
+
+            { x: 9, y: 2, cost: 1000, steps: 0, name: "D" },
+            { x: 9, y: 3, cost: 1, steps: 0, name: "A" },
+            { x: 9, y: 4, cost: 100, steps: 0, name: "C" },
+            { x: 9, y: 5, cost: 100, steps: 0, name: "C" },
+        ];
+
+        var states = [];
+
+        states.push({ s: "Start", pods: JSON.parse(JSON.stringify(pods)) });
+
+        var currentClick = null;
+
+        reDraw();
+
+
+        function reDraw() {
+            currentClick = null;
+            var c = "";
+            for (let y = 1; y < 6; y++) {
+                for (let x = 1; x < 12; x++) {
+                    var p = pods.find((p) => p.x == x && p.y == y)
+
+                    if (p) {
+                        c += `<span class="pod" data-x="${x}" data-y="${y}">${p.name}</span>`
+
+                    } else {
+                        if (y > 1 && (x < 3 || x > 9 || x % 2 == 0)) {
+                            c += `<span class="wall">#</span>`
+
+                        } else {
+                            c += `<span class="empty" data-x="${x}" data-y="${y}">.</span>`
+                        }
+                    }
+                }
+
+                c += "<br>"
+            }
+
+            document.getElementById("states").innerHTML = states.map(s => s.s + ". Cost: " + s.pods.map(p => p.steps * p.cost).reduce((p, v) => p + v, 0)).join("<br>")
+                ;
+
+            cave.innerHTML = c
+
+            Array.from(document.querySelectorAll(".pod")).forEach(pe => {
+                pe.addEventListener("click", () => {
+
+                    var x = pe.dataset.x;
+                    var y = pe.dataset.y;
+
+                    var cp = pods.find((p) => p.x == pe.dataset.x && p.y == pe.dataset.y)
+
+                    if (pods.find(p => p.x == x && p.y < y)) {
+                        console.log("Cant move")
+                    } else {
+
+                        currentClick = cp;
+                    }
+
+
+                });
+            });
+
+            Array.from(document.querySelectorAll(".empty")).forEach(p => {
+                p.addEventListener("click", () => {
+
+                    if (currentClick) {
+                        var targetX = p.dataset.x;
+                        var targetY = p.dataset.y;
+                        var oldX = currentClick.x
+                        var oldY = currentClick.y
+                        console.log(currentClick)
+
+                        var steps = Math.abs(oldY - 1) + Math.abs(targetX - oldX) + (targetY - 1)
+
+                        currentClick.x = targetX;
+                        currentClick.y = targetY;
+                        currentClick.steps += steps
+
+                        states.push({ s: `${currentClick.name} moved ${steps} from (${oldX},${oldY}) to (${targetX},${targetY}) for cost ${steps * currentClick.cost}`, pods: JSON.parse(JSON.stringify(pods)) });
+
+                        console.log("steps: " + steps);
+
+                        reDraw();
+                    } else {
+                        currentClick = [];
+                    }
+                });
+            });
+
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && event.key === 'z') {
+                if (states.length > 1) {
+                    console.log("undo: " + states.length)
+                    states.pop();
+                    console.log(pods[0])
+                    pods = JSON.parse(JSON.stringify(states[states.length - 1].pods));
+                    console.log(pods[0])
+
+                    reDraw();
+                }
+
+            }
+        });
+
+    </script>
+</body>
+
+</html>
